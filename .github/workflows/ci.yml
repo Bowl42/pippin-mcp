@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: [main]
 
+# pippin-mcp needs Swift 6.2 + macOS 26 SDK (FoundationModels framework).
+# As of this writing GitHub-hosted macos-latest still ships Swift 6.1; this
+# workflow tries to select a newer Xcode if installed on the runner, and
+# falls back to letting the build fail with a clear error.
 jobs:
   build-test:
     name: Build & test
@@ -14,9 +18,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Pick newest installed Xcode
+        run: |
+          newest=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
+          echo "Using $newest"
+          sudo xcode-select -s "$newest/Contents/Developer"
+
       - name: Show toolchain
         run: |
           sw_vers
+          xcodebuild -version
           swift --version
 
       - name: Resolve dependencies
