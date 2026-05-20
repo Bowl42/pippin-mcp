@@ -7,13 +7,14 @@ on:
   pull_request:
     branches: [main]
 
-# pippin-mcp needs Swift 6.2 + macOS 26 SDK (FoundationModels framework).
-# As of this writing GitHub-hosted macos-latest still ships Swift 6.1; this
-# workflow tries to select a newer Xcode if installed on the runner, and
-# falls back to letting the build fail with a clear error.
+# pippin-mcp targets macOS 26 (Foundation Models framework). GitHub-hosted
+# runners ship the macOS 26 SDK via Xcode 26 but the underlying runner OS is
+# older, so the FoundationModels dylib isn't available at runtime. We compile
+# in CI to catch source breakage; tests and binary smoke run only work on a
+# real macOS 26 host. Until macos-26 runners ship, run `swift test` locally.
 jobs:
-  build-test:
-    name: Build & test
+  build:
+    name: Build
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,13 +37,5 @@ jobs:
       - name: Build (debug)
         run: swift build -v
 
-      - name: Test
-        run: swift test -v
-
       - name: Build (release)
         run: swift build -c release
-
-      - name: Smoke run
-        run: |
-          .build/release/pippin-mcp --version
-          .build/release/pippin-mcp doctor || true
