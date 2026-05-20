@@ -26,6 +26,15 @@ Run `pippin-mcp doctor` to see what's available on your machine.
 
 ## Install
 
+### Homebrew (recommended)
+
+```bash
+brew tap Bowl42/tap
+brew install pippin-mcp
+```
+
+### From source
+
 ```bash
 git clone https://github.com/Bowl42/pippin-mcp.git
 cd pippin-mcp
@@ -33,7 +42,7 @@ swift build -c release
 cp .build/release/pippin-mcp /usr/local/bin/   # or any dir on $PATH
 ```
 
-There are no signed prebuilt binaries yet — build from source.
+There are no signed prebuilt binaries yet — Homebrew builds from source locally.
 
 ## Use with an MCP client
 
