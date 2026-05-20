@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "pippin": {
+      "command": "/usr/local/bin/pippin-mcp",
+      "args": ["serve"]
+    }
+  }
+}
