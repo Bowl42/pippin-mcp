@@ -29,6 +29,26 @@ struct DoctorCommand: AsyncParsableCommand {
         check(name: "Translation (translate)",
               detail: "framework present; language packs are downloaded on demand",
               hint: "If translate returns 'notInstalled', open the Translate app and download the language pair once (e.g. English ↔ Simplified Chinese).")
+
+        printConfig()
+    }
+
+    private func printConfig() {
+        let resolved = ConfigLoader.resolve(
+            cliOverrides: ServeConfig(),
+            bindPublicCLI: false,
+            explicitConfigPath: nil
+        )
+        print("HTTP serve config (effective)")
+        print("  host:         \(resolved.host)")
+        print("  port:         \(resolved.port)")
+        print("  maxBodyMb:    \(resolved.maxBodyMb)")
+        print("  bindPublic:   \(resolved.bindPublic)")
+        print("  authToken:    \(resolved.authToken == nil ? "(none)" : "(set, \(resolved.authToken!.count) chars)")")
+        print("  source file:  \(resolved.configFileLoaded ?? "(none)")")
+        print()
+        print("Override precedence: CLI flag > env (PIPPIN_*) > config.json > built-in.")
+        print("Edit /opt/homebrew/etc/pippin-mcp/config.json, then `brew services restart pippin-mcp`.")
     }
 
     private func check(name: String, ok: Bool = true, detail: String, hint: String? = nil) {

@@ -20,6 +20,12 @@ struct HTTPConfig {
 /// GET/DELETE /mcp — 405 Method Not Allowed (stateless: no SSE, no sessions)
 struct HTTPTransportRunner {
     let config: HTTPConfig
+    let configFileLoaded: String?
+
+    init(config: HTTPConfig, configFileLoaded: String? = nil) {
+        self.config = config
+        self.configFileLoaded = configFileLoaded
+    }
 
     func run() async throws {
         let validators: [any HTTPRequestValidator] = [
@@ -70,6 +76,11 @@ struct HTTPTransportRunner {
             + (token != nil && !token!.isEmpty ? " (auth: Bearer required)" : " (no auth)")
             + (config.bindPublic ? " [public-bind, origin check disabled]" : "")
         FileHandle.standardError.write(Data("\(banner)\n".utf8))
+        if let path = configFileLoaded {
+            FileHandle.standardError.write(Data("config: \(path)\n".utf8))
+        } else {
+            FileHandle.standardError.write(Data("config: (none — using built-in defaults + env)\n".utf8))
+        }
         try await app.runService()
     }
 

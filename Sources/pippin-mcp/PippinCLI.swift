@@ -27,20 +27,23 @@ struct ServeCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Transport: stdio (default) or http")
     var transport: TransportKind = .stdio
 
-    @Option(name: .long, help: "HTTP bind host (http only)")
-    var host: String = "127.0.0.1"
+    @Option(name: .long, help: "HTTP bind host (default 127.0.0.1)")
+    var host: String?
 
-    @Option(name: .long, help: "HTTP bind port (http only)")
-    var port: Int = 1996
+    @Option(name: .long, help: "HTTP bind port (default 1996)")
+    var port: Int?
 
-    @Option(name: .long, help: "Max request body in MB (http only)")
-    var maxBodyMb: Int = 256
+    @Option(name: .long, help: "Max request body in MB (default 256)")
+    var maxBodyMb: Int?
 
-    @Option(name: .long, help: "Require Bearer token for all routes except /healthz. Env: PIPPIN_TOKEN")
+    @Option(name: .long, help: "Require Bearer token for /mcp. Env: PIPPIN_TOKEN")
     var authToken: String?
 
-    @Flag(name: .long, help: "Disable localhost-only origin check (allow public binding). Use with --host 0.0.0.0.")
+    @Flag(name: .long, help: "Disable localhost-only origin check. Use with --host 0.0.0.0.")
     var bindPublic: Bool = false
+
+    @Option(name: .long, help: "Path to config.json (defaults: /opt/homebrew/etc/pippin-mcp/config.json, /usr/local/etc/pippin-mcp/config.json)")
+    var config: String?
 
     func run() async throws {
         switch transport {
@@ -50,15 +53,24 @@ struct ServeCommand: AsyncParsableCommand {
             try await pippin.start(transport: t)
             await pippin.waitUntilCompleted()
         case .http:
-            let token = authToken ?? ProcessInfo.processInfo.environment["PIPPIN_TOKEN"]
-            let cfg = HTTPConfig(
-                host: host,
-                port: port,
-                maxBodyMB: maxBodyMb,
-                authToken: token,
-                bindPublic: bindPublic
+            let resolved = ConfigLoader.resolve(
+                cliOverrides: ServeConfig(
+                    host: host,
+                    port: port,
+                    maxBodyMb: maxBodyMb,
+                    authToken: authToken
+                ),
+                bindPublicCLI: bindPublic,
+                explicitConfigPath: config
             )
-            try await HTTPTransportRunner(config: cfg).run()
+            let cfg = HTTPConfig(
+                host: resolved.host,
+                port: resolved.port,
+                maxBodyMB: resolved.maxBodyMb,
+                authToken: resolved.authToken,
+                bindPublic: resolved.bindPublic
+            )
+            try await HTTPTransportRunner(config: cfg, configFileLoaded: resolved.configFileLoaded).run()
         }
     }
 }
