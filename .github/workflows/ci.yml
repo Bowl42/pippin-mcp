@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    name: Build & test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          sw_vers
+          swift --version
+
+      - name: Resolve dependencies
+        run: swift package resolve
+
+      - name: Build (debug)
+        run: swift build -v
+
+      - name: Test
+        run: swift test -v
+
+      - name: Build (release)
+        run: swift build -c release
+
+      - name: Smoke run
+        run: |
+          .build/release/pippin-mcp --version
+          .build/release/pippin-mcp doctor || true
