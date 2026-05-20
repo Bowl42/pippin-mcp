@@ -41,8 +41,7 @@ let package = Package(
         .testTarget(
             name: "PippinCoreTests",
             dependencies: ["PippinCore"],
-            path: "Tests/PippinCoreTests",
-            resources: [.copy("Fixtures")]
+            path: "Tests/PippinCoreTests"
         ),
         .testTarget(
             name: "PippinServerTests",
